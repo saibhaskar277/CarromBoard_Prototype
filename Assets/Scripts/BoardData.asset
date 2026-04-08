@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e807fc8d3dff15a4f99ba8b061a52f10, type: 3}
+  m_Name: BoardData
+  m_EditorClassIdentifier: 
+  boardPRefab: {fileID: 9038833759834985174, guid: c1af138381c27ab498ca3603b14dd33e, type: 3}
+  discDatas:
+  - DiscType: 0
+    prefab: {fileID: 884684701563644794, guid: 5cdb944953fb1124bb666e34c155798e, type: 3}
+  - DiscType: 1
+    prefab: {fileID: -4027249330681400451, guid: aa055bbf2a3d05141a31d5bb8244b973, type: 3}
+  - DiscType: 2
+    prefab: {fileID: -8183729002207660825, guid: 93f7e523796b47f46aef5d5951a63057, type: 3}
+  - DiscType: 3
+    prefab: {fileID: -6759483507985432214, guid: e3e7cf9d0b3739542829d242695b2703, type: 3}
