@@ -8,6 +8,8 @@ A **custom-built 2D Carrom game in Unity** featuring **custom physics, precise a
 
 ---
 
+<video src="demo/Carromboard 2D Remake - Samplescene.mp4" controls width="800"></video>
+
 # ✨ Features
 
 ## 🎯 Precision Striker Aim
