@@ -8,7 +8,7 @@ A **custom-built 2D Carrom game in Unity** featuring **custom physics, precise a
 
 ---
 ## 🎥 Gameplay Demo
-<video src="demo/Carromboard 2D Remake - Samplescene.mp4" controls width="800"></video>
+[![Watch Demo](demo/Carromboard 2D Remake - Samplescene.png)](demo/carrom-demo-720p.mp4)
 
 # ✨ Features
 
