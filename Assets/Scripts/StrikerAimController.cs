@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 public class StrikerAimController : MonoBehaviour
 {
@@ -26,7 +25,8 @@ public class StrikerAimController : MonoBehaviour
 
 
 
-    bool canAim= true;
+    bool canAim = true;
+    bool isHumanTurn = true;
 
     void Start()
     {
@@ -34,6 +34,10 @@ public class StrikerAimController : MonoBehaviour
         HideDots();
 
         EventManager.AddListner<OnStrikeEndEvent>(OnStrikeEndEventListner);
+        EventManager.AddListner<RequestStrikerShotEvent>(OnRequestStrikerShot);
+        EventManager.AddListner<RequestStrikerWorldPositionEvent>(OnRequestStrikerWorldPosition);
+        EventManager.AddListner<RequestStrikerAimDirectionEvent>(OnRequestStrikerAimDirection);
+        EventManager.AddListner<TurnStartedEvent>(OnTurnStarted);
 
     }
 
@@ -44,13 +48,21 @@ public class StrikerAimController : MonoBehaviour
 
     private void OnDisable()
     {
+        EventManager.RemoveListner<OnStrikeEndEvent>(OnStrikeEndEventListner);
         EventManager.RemoveListner<StrikerPositionChangedEvent>(MoveStriker);
+        EventManager.RemoveListner<RequestStrikerShotEvent>(OnRequestStrikerShot);
+        EventManager.RemoveListner<RequestStrikerWorldPositionEvent>(OnRequestStrikerWorldPosition);
+        EventManager.RemoveListner<RequestStrikerAimDirectionEvent>(OnRequestStrikerAimDirection);
+        EventManager.RemoveListner<TurnStartedEvent>(OnTurnStarted);
     }
 
     void MoveStriker(StrikerPositionChangedEvent data)
     {
-        if(canAim)
-            strikerVisual.position = new Vector3(data.Position, transform.position.y, transform.position.z);
+        if (canAim && isHumanTurn)
+        {
+            strikerVisual.position = data.worldPosition;
+            transform.localPosition = Vector3.zero;
+        }
     }
 
 
@@ -60,9 +72,45 @@ public class StrikerAimController : MonoBehaviour
         canAim = true;
     }
 
+    void OnTurnStarted(TurnStartedEvent e)
+    {
+        isHumanTurn = e.activePlayer == PlayerSide.Human;
+        if (!isHumanTurn)
+        {
+            isAiming = false;
+            HideDots();
+        }
+    }
+
+    void OnRequestStrikerWorldPosition(RequestStrikerWorldPositionEvent e)
+    {
+        // Always apply — game/turn logic must reposition even while canAim is false.
+        // OnStrikeEnd runs TurnGameManager before this script sets canAim = true, so
+        // guarding here left the striker stuck on the opponent baseline after AI turns.
+        Vector3 target = new Vector3(e.worldPosition.x, e.worldPosition.y, transform.position.z);
+        strikerVisual.position = target;
+        transform.localPosition = Vector3.zero;
+    }
+
+    void OnRequestStrikerAimDirection(RequestStrikerAimDirectionEvent e)
+    {
+        Vector2 d = e.direction.sqrMagnitude > 0.0001f ? e.direction.normalized : Vector2.down;
+        strikerVisual.right = new Vector3(d.x, d.y, 0f);
+    }
+
+    void OnRequestStrikerShot(RequestStrikerShotEvent e)
+    {
+        if (!canAim)
+            return;
+
+        Vector2 direction = e.direction.sqrMagnitude > 0.0001f ? e.direction.normalized : Vector2.up;
+        float power = Mathf.Clamp(e.power, 0f, maxPower);
+        ShootWith(direction, power);
+    }
+
     void Update()
     {
-        if(canAim)
+        if (canAim && isHumanTurn)
             HandleInput();
     }
 
@@ -150,10 +198,14 @@ public class StrikerAimController : MonoBehaviour
 
     void Shoot()
     {
+        ShootWith(shootDirection, shootPower);
+    }
+
+    void ShootWith(Vector2 direction, float power)
+    {
         strikerPhysics.SetVelocity(Vector2.zero);
-        strikerPhysics.AddImpulse(shootDirection * shootPower);
+        strikerPhysics.AddImpulse(direction * power);
         canAim = false;
         EventManager.RaiseEvent(new OnStrikerHitEvent());
-
     }
 }

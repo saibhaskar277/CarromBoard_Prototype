@@ -5,6 +5,9 @@ public class BoardController : MonoBehaviour
 {
     public Transform strikerLeftPos;
     public Transform strikerRightPos;
+    public Transform opponentStrikerLeftPos;
+    public Transform opponentStrikerRightPos;
+    public Transform opponentStrikerCenter;
     public Transform strikerCenter;
     public Transform coinParent;
 
@@ -16,16 +19,31 @@ public class BoardController : MonoBehaviour
 
     private void Awake()
     {
-        EventManager.RaiseEvent(
-            new SetStrikerPositionOffsetEvent(
-                strikerLeftPos.position.x,
-                strikerRightPos.position.x
-            )
-        );
-
         EventManager.AddListner<OnCoinSpawnedEvent>(OnCoinsSpawned);
         EventManager.AddListner<OnStrikerSpawnedEvent>(OnStrikerSpawned);
         EventManager.AddListner<OnStrikerHitEvent>(OnStrikerHit);
+    }
+
+    private void Start()
+    {
+        EventManager.RaiseEvent(
+            new SetStrikerPositionOffsetEvent(
+                strikerLeftPos.position,
+                strikerRightPos.position
+            )
+        );
+
+        if (opponentStrikerLeftPos != null && opponentStrikerRightPos != null)
+        {
+            float y = opponentStrikerCenter != null ? opponentStrikerCenter.position.y : strikerCenter.position.y;
+            EventManager.RaiseEvent(
+                new SetOpponentStrikerPositionOffsetEvent(
+                    opponentStrikerLeftPos.position.x,
+                    opponentStrikerRightPos.position.x,
+                    y
+                )
+            );
+        }
     }
 
     void OnStrikerHit(OnStrikerHitEvent e)
@@ -35,6 +53,17 @@ public class BoardController : MonoBehaviour
     }
 
     public Transform GetCoinParent() => coinParent;
+
+    public Vector2[] GetHolePositions()
+    {
+        CarromHole[] holes = GetComponentsInChildren<CarromHole>(true);
+        Vector2[] result = new Vector2[holes.Length];
+        for (int i = 0; i < holes.Length; i++)
+        {
+            result[i] = holes[i].transform.position;
+        }
+        return result;
+    }
 
     void OnStrikerSpawned(OnStrikerSpawnedEvent e)
     {
@@ -80,8 +109,10 @@ public class BoardController : MonoBehaviour
 
     void ResetStriker()
     {
-        striker.transform.position = strikerCenter.position;
-        striker.SetVelocity(Vector2.zero);
+        if (striker != null)
+        {
+            striker.SetVelocity(Vector2.zero);
+        }
 
         canCheckCoinMovement = false;
 

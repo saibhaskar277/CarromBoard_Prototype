@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6af7330ace85214ea942e539684395a, type: 3}
+  m_Name: CarromAIConfig
+  m_EditorClassIdentifier: Assembly-CSharp::CarromAIConfig
+  turnDelay: 0.55
+  jitterRetargetInterval: 0.1
+  aiThinkingMoveSpeed: 2.8
+  aiThinkingAimWobbleDegrees: 40
+  aimLerpDuration: 0.4
+  accuracy: 0.82
+  minAngleErrorDegrees: 0.12
+  maxAngleErrorDegrees: 14
+  contactSeparationPadding: 0.02
+  minPower: 3
+  maxPower: 10
+  powerDistanceMultiplier: 6
+  strikerSampleCount: 11
+  predictionSteps: 48
+  predictionStepTime: 0.02
+  pocketLineWeight: 1.2
+  distanceWeight: 0.45
+  holeProximityWeight: 0.35
+  pathHitsTargetWeight: 2
+  directHitWeight: 0.55

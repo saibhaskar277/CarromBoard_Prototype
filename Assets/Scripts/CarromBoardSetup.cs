@@ -45,7 +45,10 @@ public class CarromBoardSetup : MonoBehaviour
             transform
         );
 
-       coinsParent = spawnedBoard.GetComponent<BoardController>().GetCoinParent();
+        GameReferences.RegisterBoard(spawnedBoard);
+        EventManager.RaiseEvent(new OnBoardSpawnedEvent(spawnedBoard));
+
+        coinsParent = spawnedBoard.GetComponent<BoardController>().GetCoinParent();
     }
 
     void SpawnCoins()
@@ -104,6 +107,7 @@ public class CarromBoardSetup : MonoBehaviour
             Quaternion.identity,
             transform
         );
+        GameReferences.RegisterStriker(spawnedStriker);
 
         EventManager.RaiseEvent(new OnStrikerSpawnedEvent(spawnedStriker));
 
@@ -128,11 +132,14 @@ public class CarromBoardSetup : MonoBehaviour
         }
 
         CustomDiscPhysics2D disc = Instantiate(data.prefab, position, Quaternion.identity, coinsParent);
+        GameReferences.RegisterDisc(disc, type, position);
         spawnedCoins.Add(disc);
     }
 
     void ClearBoard()
     {
+        GameReferences.Reset();
+
         foreach (var coin in spawnedCoins)
         {
             if (coin != null)

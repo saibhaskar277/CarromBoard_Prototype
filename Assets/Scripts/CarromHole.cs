@@ -97,6 +97,15 @@ public class CarromHole : MonoBehaviour
 
     void PocketDisc(CustomDiscPhysics2D disc)
     {
+        DiscType discType = DiscType.White;
+        Vector2 spawnPosition = disc.transform.position;
+        if (GameReferences.TryGetDiscData(disc, out DiscRuntimeData data))
+        {
+            discType = data.discType;
+            spawnPosition = data.spawnPosition;
+        }
+
+        EventManager.RaiseEvent(new DiscPocketedEvent(disc, discType, spawnPosition, transform.position));
         disc.SetVelocity(Vector2.zero);
         disc.gameObject.SetActive(false);
     }

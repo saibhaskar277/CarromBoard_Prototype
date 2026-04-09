@@ -26,6 +26,10 @@ public class CustomDiscPhysics2D : MonoBehaviour
         radius = circle.radius * Mathf.Max(transform.lossyScale.x, transform.lossyScale.y);
     }
 
+    public float GetRadius() => radius;
+
+    public LayerMask GetCoinMask() => coinMask;
+
     void FixedUpdate()
     {
         float dt = Time.fixedDeltaTime;
