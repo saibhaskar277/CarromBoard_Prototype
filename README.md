@@ -1,140 +1,116 @@
-# 🎯 Unity Carrom Game (In Development)
+# Carrom Board (Unity)
 
-A **custom-built 2D Carrom game in Unity** featuring **custom physics, precise aiming prediction, realistic pocket logic, and config-driven board setup**.
-
-> 🚧 **Project Status: In Development**
->
-> Core gameplay systems are functional, and the project is actively evolving with improved physics accuracy, turn logic, scoring, and mobile polish.
-
----
-## 🎥 Gameplay Demo
-[![Watch Demo](demo/carrom-thumbnail.png)](demo/carrom-demo-720p.mp4)
-
-# ✨ Features
-
-## 🎯 Precision Striker Aim
-- Drag-to-aim only from striker trigger area
-- Dynamic **power line renderer**
-- Power color feedback
-  - 🟢 Low power
-  - 🟡 Medium power
-  - 🔴 High power
-- Accurate drag-based force control
+A 2D Carrom-style game built in **Unity 6** with **custom disc physics**, **event-driven gameplay**, **human vs AI** turns, scoring, and queen (red coin) cover rules. The project focuses on predictable simulation, a clean separation between physics, rules, and UI, and a **ScriptableObject**-driven AI profile.
 
 ---
 
-## 🔵 Custom Disc Physics
-Built using a **fully custom physics system**, replacing Unity Rigidbody for predictable gameplay.
+## Requirements
 
-### Supports
-- Velocity-based movement
-- Friction
-- Border reflection
-- Coin-to-coin force transfer
-- Energy loss on collision
-- Stop threshold detection
-- Shared impulse system
+| Item | Version / notes |
+|------|------------------|
+| **Unity Editor** | **6000.3.12f1** (see `ProjectSettings/ProjectVersion.txt`) |
+| **Render pipeline** | URP (project uses Universal RP) |
+| **Platform** | Tested in Editor; Android build settings may appear in the repo |
+
+Open the project folder **`CarromBoard_Prototype`** (repository root) in Unity Hub and open **`Assets/Scenes/SampleScene.unity`**.
 
 ---
 
-## 📍 Exact Prediction Path
-- Multi-bounce prediction dots
-- Uses the **same custom physics logic**
-- Wall reflection prediction
-- Stops at first coin collision
-- Shared simulation system for exact aiming feedback
+## How to play
+
+1. **Move the striker** along your baseline with the **slider** (player side uses board markers `strikerLeftPos` / `strikerRightPos`; positions are **lerped in world space** between those transforms).
+2. **Aim** by dragging inside the striker **aim trigger** (not from empty board space). Release to shoot.
+3. **Pocket your colour** (white for player, black for AI in the current rules) to score and earn an **extra turn** if applicable.
+4. **Pocket the red coin (queen)** then **cover** by pocketing your own coin on a later shot; otherwise the queen is respotted.
 
 ---
 
-## 🕳️ Realistic Pocket Logic
-Advanced **precision hole detection system**:
+## Features (current)
 
-- Center-based pocket capture
-- High-speed rim rejection
-- Fast shots require better center accuracy
-- Bad-angle shots bounce back
-- Perfect center shots always pocket
-- Realistic competitive carrom feel
+### Physics and aiming
 
----
+- **`CustomDiscPhysics2D`**: velocity, friction, border bounce, disc–disc collisions, stop threshold.
+- **`StrikerAimController`**: drag aim, power clamp, **prediction dots** using the same `SimulatePath` rules as runtime (stops at first coin hit for preview).
 
-## 🧩 Config-Driven Architecture
-Uses a generic **Config Registry + Config Manager** system.
+### Pockets
 
-### Current Configs
-- `CarromBoardData`
-- Board prefab
-- Disc prefab mapping
-- Striker prefab
-- Queen / white / black coin setup
+- **`CarromHole`**: overlap test, center vs rim behaviour, speed-dependent alignment, rim bounce when the shot is not aligned into the pocket.
 
-This allows easy swapping of:
-- boards
-- themes
-- disc sets
-- rule presets
+### Rules and flow
 
----
+- **`TurnGameManager`**: human vs AI, shot resolution from pocket events, score, extra turn when pocketing own coins, opponent score when pocketing wrong colour, queen pocket/cover/respawn logic.
+- **`GameReferences`**: static registration of board, striker, and per-disc metadata (type, spawn position) without attaching identity components to every disc.
 
-## 🏗️ Board Bootstrap System
-`CarromBoardSetup` handles:
+### AI
 
-- board spawn
-- striker spawn
-- queen spawn
-- black & white ring layout
-- event-driven runtime setup
+- **`CarromAIConfig`** (ScriptableObject): accuracy, power limits, prediction samples, scoring weights, **thinking delay**, baseline **roam + aim wobble**, and **smooth lerp** to the chosen shot position (no instant teleport).
+- **`EnemyController`**: evaluates shots along the opponent baseline toward pockets using `SimulatePath` and config weights.
+
+### UI
+
+- **`GameHudController`**: listens for score / turn / player data events (see scene **`GameHUD`** under Canvas in `SampleScene`).
+- Menu stack via **`UIController`** / **`UIScreen`** (optional screens).
+
+### Events and commands
+
+- Central **`EventManager`** with `IGameEvent` payloads (`CarromBoardEvents.cs` and related).
+- **`GameCommands`**: thin command wrappers (`PositionStrikerCommand`, `ShootStrikerCommand`) that raise events so AI and humans share the same shot pipeline.
 
 ---
 
-## 🔁 Turn Reset Logic
-After all coins stop:
+## Architecture (high level)
 
-- striker auto resets
-- velocity clears safely
-- turn-end event fires
-- ready for multiplayer turn system
-
----
-
-# 🛠️ Tech Stack
-- **Unity 6**
-- **C#**
-- **Custom 2D Physics**
-- **ScriptableObject Config System**
-- **Event-driven architecture**
-
----
-
-# 🚀 Planned Features
-- ✅ Pocket logic
-- ✅ Prediction system
-- ✅ Custom physics
-- 🔄 Scoring system
-- 🔄 Queen cover rules
-- 🔄 Player turn system
-- 🔄 Foul rules
-- 🔄 AI opponent
-- 🔄 Online multiplayer
-- 🔄 Mobile optimization
-- 🔄 Sound & VFX polish
-- 🔄 Board skins / themes
-
----
-
-# 📂 Project Architecture
 ```text
-Scripts
-├── Physics
-│   └── CustomDiscPhysics2D
-├── Board
-│   ├── CarromBoardSetup
-│   ├── BoardController
-│   └── CarromHole
-├── Input
-│   └── StrikerAimController
-├── Config
-│   ├── ConfigRegistry
-│   ├── ConfigManager
-│   └── CarromBoardData
-└── Events
+CarromBoardSetup          → spawns board, striker, coins; registers discs in GameReferences; raises spawn events
+BoardController           → striker range events, motion stop → strike end; hole positions for AI
+StrikerMoveHandler        → slider → StrikerPositionChangedEvent (world position on baseline)
+StrikerAimController      → aim, shot, prediction; obeys RequestStrikerWorldPosition / Shot / AimDirection
+TurnGameManager           → rules, AI coroutine, score broadcasts
+EnemyController + CarromAIConfig → shot selection
+CarromHole                → DiscPocketedEvent when a disc is pocketed
+GameHudController         → TMP HUD bound in scene
+```
+
+**Important:** `GameReferences` is reset when the board is cleared in `CarromBoardSetup`.
+
+---
+
+## Configuration assets
+
+| Asset | Purpose |
+|--------|---------|
+| **`CarromBoardData`** | Board prefab, disc prefabs (red / black / white / striker). |
+| **`CarromAIConfig`** | AI tuning (delay, accuracy, roam, lerp to aim, prediction weights). Assign on **`TurnGameManager`** in the scene. |
+
+---
+
+## Demo
+
+A video and thumbnail may live under `demo/` (e.g. `demo/carrom-demo-720p.mp4`). Paths are relative to the repository root.
+
+---
+
+## Repository layout (root)
+
+```text
+CarromBoard_Prototype/
+├── Assets/                 # Unity assets, scripts, scenes, prefabs
+├── Packages/               # Unity package manifest
+├── ProjectSettings/        # Unity project settings
+├── demo/                   # Optional demo media
+└── README.md
+```
+
+---
+
+## Development status
+
+Core loop (shoot, pockets, turns, AI, scoring, queen rules, HUD) is implemented and evolving. Polish items (audio, VFX, online play, extra foul rules) are optional follow-ups.
+
+---
+
+## Contributing
+
+1. Use the Unity version above to avoid project upgrade noise.
+2. Prefer **events** and small, focused scripts when extending rules or UI.
+3. Keep AI tuning in **`CarromAIConfig`** rather than hard-coding in `EnemyController` or `TurnGameManager`.
